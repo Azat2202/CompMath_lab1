@@ -28,6 +28,7 @@ class IterationMethod:
         else:
             self.accuracy = float(input("Введите погрешность: "))
             self.size = int(input("Введите количество строк: "))
+            print("Вводите матрицу:")
             for i in range(self.size):
                 self.matrix.append(list(map(float, input().split())))
         for i in range(self.size):

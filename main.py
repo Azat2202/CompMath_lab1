@@ -1,5 +1,4 @@
 import sys
-from typing import List
 
 """
 ВЫЧМАТ
@@ -41,14 +40,14 @@ class IterationMethod:
         Если он находится в столбце, то перемещаем строки
         """
         for i in range(self.size):
-            max_line = max(self.matrix[i][i:])
-            max_column = max(self.get_column(i)[i:])
+            max_line = max(map(abs, self.matrix[i][i:]))
+            max_column = max(map(abs, self.get_column(i)[i:]))
             if max_column >= max_line:
-                line_index = self.get_column(i)[i:].index(max_line) + i
+                line_index = self.get_column(i)[i:].index(max_column) + i
                 self.matrix[i], self.matrix[line_index] = self.matrix[line_index], self.matrix[i]
                 self.right_parts[i], self.right_parts[line_index] = self.right_parts[line_index], self.right_parts[i]
             else:
-                column_index = self.matrix[i].index(max_column)
+                column_index = self.matrix[i].index(max_line)
                 column_buffer = self.get_column(column_index)
                 self.set_column(column_index, self.get_column(i))
                 self.set_column(i, column_buffer)
@@ -56,10 +55,10 @@ class IterationMethod:
     def is_diag_dominance(self) -> bool:
         is_strictly = False
         for i in range(self.size):
-            if not max(self.matrix[i]) == self.matrix[i][i]:
-                return False
-            elif self.matrix.count(self.matrix[i]) == 1:
+            if self.matrix[i][i] > sum(map(abs, self.matrix[i])) - abs(self.matrix[i][i]):
                 is_strictly = True
+            elif self.matrix[i][i] < sum(map(abs, self.matrix[i])) - abs(self.matrix[i][i]):
+                return False
         return is_strictly
 
     def solve(self) -> (list[float], int, list[float]):
@@ -69,23 +68,29 @@ class IterationMethod:
              for i, line in enumerate(self.matrix)
              ]
         D = [num / self.matrix[i][i] for i, num in enumerate(self.right_parts)]
-        X = D.copy()
-        print(C)
-        print(D)
+        X = [10, 10, 10]
+        # print(C)
+        # print(D)
         iter_count = 0
         while True:
+            print("Итерация ", iter_count)
+            print("Значения X: ", X)
             iter_count += 1
             if iter_count > self.MAX_ITERATION_COUNT:
                 print("Превышено максимальное количество итераций!", file=sys.stderr)
-                break
+                sys.exit(1)
             X_next = [
                 sum(self.mul_vectors(C[i], X)) + D[i]
                 for i in range(self.size)
             ]
             if max(map(abs, self.sub_vectors(X_next, X))) < self.accuracy:
+                r = []
+                for i in range(len(self.matrix)):
+                    r.append(sum(self.mul_vectors(self.matrix[i], X)) - self.right_parts[i])
+                print("Критерий по невязке:")
+                print(r)
                 return X_next, iter_count, list(map(abs, self.sub_vectors(X_next, X)))
             X = X_next
-
 
     def get_column(self, i: int) -> list[float]:
         return [j[i] for j in self.matrix]
@@ -117,8 +122,7 @@ def main():
         print("Приведение к матрице преобладания диагональных коэффициентов:")
         solver.print()
         if not solver.is_diag_dominance():
-            print("Приведение к матрице преобладания диагональных коэффициентов невозможно. Выход")
-            return
+            print("Приведение к матрице преобладания диагональных коэффициентов невозможно. Ответ не гарантирован!", file=sys.stderr)
     X, iter_count, acc_list = solver.solve()
     print("Вектор неизвестных:")
     print(X)

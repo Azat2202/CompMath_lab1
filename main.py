@@ -68,7 +68,7 @@ class IterationMethod:
              for i, line in enumerate(self.matrix)
              ]
         D = [num / self.matrix[i][i] for i, num in enumerate(self.right_parts)]
-        X = [10, 10, 10]
+        X = D.copy()
         # print(C)
         # print(D)
         iter_count = 0
